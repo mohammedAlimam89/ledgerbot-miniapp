@@ -65,6 +65,9 @@
 <label for="desc">Description</label>
 <input id="desc" type="text" placeholder="e.g. Office rent for July">
 
+<label for="entryDate">Date</label>
+<input id="entryDate" type="date">
+
 <div id="lines"></div>
 
 <button class="add-btn" onclick="addLine()">+ Add line</button>
@@ -85,6 +88,8 @@ const tg = window.Telegram?.WebApp;
 if (tg) { tg.ready(); tg.expand(); }
 
 const API_URL = "https://kchqsazvfxhbqyafsqcp.supabase.co/functions/v1/journal-app-api";
+
+document.getElementById("entryDate").value = new Date().toISOString().slice(0, 10);
 
 let accounts = [];
 let lineCount = 0;
@@ -151,6 +156,7 @@ function recalc() {
   const statusEl = document.getElementById("balanceStatus");
   const submitBtn = document.getElementById("submitBtn");
   const desc = document.getElementById("desc").value.trim();
+  const date = document.getElementById("entryDate").value;
 
   const balanced = lines.length >= 2 && Math.abs(totalDebit - totalCredit) < 0.005 && totalDebit > 0;
 
@@ -160,10 +166,11 @@ function recalc() {
     statusEl.innerHTML = `<span class="bad">Not balanced</span>`;
   }
 
-  submitBtn.disabled = !(balanced && desc.length > 0);
+  submitBtn.disabled = !(balanced && desc.length > 0 && date.length > 0);
 }
 
 document.getElementById("desc").addEventListener("input", recalc);
+document.getElementById("entryDate").addEventListener("change", recalc);
 
 async function loadAccounts() {
   document.getElementById("statusMsg").textContent = "Loading accounts...";
@@ -191,6 +198,7 @@ async function loadAccounts() {
 
 async function submitEntry() {
   const desc = document.getElementById("desc").value.trim();
+  const date = document.getElementById("entryDate").value;
   const lines = getLines();
   const submitBtn = document.getElementById("submitBtn");
   const errorEl = document.getElementById("errorMsg");
@@ -207,6 +215,7 @@ async function submitEntry() {
         action: "submit_entry",
         initData: tg?.initData || "",
         description: desc,
+        date: date,
         lines: lines
       })
     });
